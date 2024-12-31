@@ -1,5 +1,6 @@
-const CLIENT_ID = '402761261358-8j4oatc61kdgn23bbuk0mqk8s7hgoco7.apps.googleusercontent.com';
-const API_KEY = 'AIzaSyDTFVY_ElsUuIPbk8LH79BdNvp4XFdQB2g';
+
+
+
 
 let tokenClient;
 let gapiInitialized = false;
