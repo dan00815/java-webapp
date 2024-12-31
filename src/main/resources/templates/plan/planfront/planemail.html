@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        .room-item {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+        }
+        .price-summary {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e9ecef;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+<h2>鄰星嗨嗨 - 訂單確認通知</h2>
+
+<p>親愛的 <span th:text="${memberName}"></span> 您好：</p>
+
+<p>感謝您預訂我們的行程，以下是您的訂單詳情：</p>
+
+<div class="order-info">
+    <p>訂單編號：<span th:text="${PlanOrderId}"></span></p>
+    <p>訂單日期：<span th:text="${#temporals.format(orderdate, 'yyyy-MM-dd HH:mm')}"></span></p>
+    <p>行程名稱：<span th:text="${planName}"></span></p>
+    <p>行程日期：<span th:text="${#temporals.format(startDate, 'yyyy-MM-dd')}"></span> 至
+        <span th:text="${#temporals.format(endDate, 'yyyy-MM-dd')}"></span></p>
+</div>
+
+<h3>已預訂房型：</h3>
+<div th:each="room : ${rooms}" class="room-item">
+    <p>房型：<span th:text="${room.roomTypeName}"></span></p>
+    <p>數量：<span th:text="${room.quantity}"></span> 間</p>
+    <p>單價：<span th:text="${room.roomPrice}"></span> 元/晚</p>
+    <p>小計：<span th:text="${room.quantity * room.roomPrice}"></span> 元</p>
+</div>
+<h3>總費用：</h3>
+<div class="price-summary">
+    <p>行程費用：<span th:text="${tripTotal}"></span> 元</p>
+    <p>住宿費用：<span th:text="${totalRoomPrice}"></span> 元</p>
+    <p>總計金額：<span th:text="${totalPrice}"></span> 元</p>
+    <p>付款方式：<span th:text="${payMethod == 0 ? '信用卡' : '銀行轉帳'}"></span></p>
+</div>
+
+<p>如有任何問題，請隨時與我們聯繫。</p>
+<p>祝您旅途愉快！</p>
+
+<img src="cid:footer" alt="footer" style="width: 100%; max-width: 600px;">
+</body>
+</html>

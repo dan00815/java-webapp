@@ -1,0 +1,366 @@
+    <!DOCTYPE html>
+    <html lang="zh-TW" xmlns:th="http://www.thymeleaf.org">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>行程報名</title>
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+      <link rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/hamburgers/1.1.3/hamburgers.min.css" />
+      <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+      <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+      <link rel="stylesheet" th:href="@{/css/elm.css}" />
+      <style>
+        .container {
+          max-width: 800px;
+          margin: 30px auto;
+          padding: 20px;
+        }
+        .order-section {
+          background: linear-gradient(to bottom, #d7f3ff, #bde6e2, #9cdcc4);
+          border-radius: 15px;
+          padding: 25px;
+          margin-bottom: 20px;
+          box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+        .section-title {
+          color: #333;
+          margin-bottom: 20px;
+          font-size: 1.5rem;
+          border-bottom: 2px solid #0080ff;
+          padding-bottom: 10px;
+        }
+        .info-item {
+          margin: 10px 0;
+          padding: 10px;
+          border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        .price-summary {
+          background: rgba(255, 255, 255, 0.8);
+          padding: 15px;
+          border-radius: 8px;
+          margin-top: 20px;
+        }
+        .price-item {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin: 10px 0;
+          padding: 10px 0;
+          border-bottom: 1px dashed #ddd;
+        }
+        .price-item:last-child {
+          border-bottom: none;
+        }
+        .total-price {
+          font-weight: bold;
+          color: #ff4444;
+          font-size: 1.2em;
+          margin-top: 10px;
+          padding-top: 10px;
+          border-top: 2px solid #ddd;
+        }
+        .button-group {
+          display: flex;
+          gap: 15px;
+          justify-content: center;
+          margin-top: 20px;
+        }
+        .btn {
+          padding: 10px 30px;
+          border-radius: 5px;
+          font-weight: bold;
+          transition: all 0.3s;
+        }
+        .btn-primary {
+          background-color: #0080ff;
+          border-color: #0080ff;
+          color: white;
+        }
+        .btn-secondary {
+          background-color: #6c757d;
+          border-color: #6c757d;
+          color: white;
+        }
+        .inner,
+        .blob {
+          display: none;
+        }
+        .alert-danger {
+          display: none;
+        }
+        .attendee-info {
+          background-color: rgba(255, 255, 255, 0.8);
+          padding: 15px;
+          border-radius: 8px;
+          margin: 15px 0;
+        }
+        .price-breakdown {
+          font-size: 0.95em;
+          color: #666;
+          margin: 5px 0;
+          padding-left: 20px;
+        }
+      </style>
+    </head>
+    <body>
+    <div th:replace="~{front-end/nav}"></div>
+    <div class="container" x-data="orderForm">
+      <form th:action="@{/planord/confirm/{id}(id=${plan.planId})}"
+            method="post"
+            id="orderForm">
+        <div class="order-section">
+          <h3 class="section-title">
+            <i class="fas fa-info-circle"></i> 報名資訊
+          </h3>
+
+          <div class="info-item">
+            <i class="fas fa-user"></i>
+            會員編號：<span th:text="${mem.memId}"></span>
+          </div>
+          <div class="info-item">
+            <i class="fas fa-user-circle"></i>
+            會員名稱：<span th:text="${mem.name}"></span>
+          </div>
+          <div class="info-item">
+            <i class="fas fa-route"></i>
+            行程名稱：<span th:text="${plan.planType.planName}"></span>
+          </div>
+          <div class="info-item">
+            <i class="fas fa-calendar"></i>
+            行程日期：<span th:text="${#temporals.format(plan.startDate, 'yyyy-MM-dd')}"></span>
+            至 <span th:text="${#temporals.format(plan.endDate, 'yyyy-MM-dd')}"></span>
+          </div>
+
+          <div class="info-item">
+            <i class="fas fa-users"></i>
+            報名人數：<span th:text="${attendeeCount}"></span> 人
+          </div>
+
+          <div class="room-selections">
+            <template x-for="room in selectedRooms" :key="room.id">
+              <div class="info-item">
+                <i class="fas fa-bed"></i>
+                <span x-text="room.roomTypeName"></span>
+                <span x-text="'× ' + room.quantity + ' 間'"></span>
+                <span class="float-end" x-text="'$' + (room.roomPrice * room.quantity)"></span>
+              </div>
+            </template>
+          </div>
+
+          <div class="price-summary">
+            <!-- 行程費用 -->
+            <div class="price-item">
+              <span>行程費用：</span>
+              <div>
+
+                <span th:with="price=(${plan.planPrice} ?: 0), count=(${attendeeCount} ?: 1)"
+                      th:text="${price * count}">0</span>
+                <div class="price-breakdown">
+                  <span th:text="${plan.planPrice ?: 0}">0</span> ×
+                  <span th:text="${attendeeCount ?: 1}">1</span> 人
+                </div>
+              </div>
+            </div>
+
+            <div th:each="room : ${selectedRooms}" class="price-item">
+              <span th:text="${room.roomTypeName ?: '房型'}">房型</span>
+              <div>
+                <span th:with="price=(${room.roomPrice} ?: 0), qty=(${room.quantity} ?: 0)"
+                      th:text="${price * qty}">0</span>
+                <div class="price-breakdown">
+                  <span th:text="${room.roomPrice ?: 0}">0</span> ×
+                  <span th:text="${room.quantity ?: 0}">0</span> 間
+                </div>
+              </div>
+            </div>
+
+            <div class="price-item total-price">
+              <span>總價格：</span>
+              <span th:text="${totalPrice ?: 0}">0</span>
+            </div>
+          </div>
+
+          <div id="roomData" style="display: none;"
+               th:data-plan-id="${plan.planId}"
+               th:data-plan-price="${plan.planPrice}"
+               th:data-attendee-count="${attendeeCount}"
+               th:data-selected-rooms="${selectedRooms}">
+          </div>
+
+          <hr class="my-4" />
+
+
+          <div class="order-section">
+            <h3 class="section-title">
+              <i class="fas fa-credit-card"></i> 付款資訊
+            </h3>
+
+            <div class="form-group">
+              <label>付款方式：</label>
+              <div class="payment-methods">
+                <div class="payment-method">
+                  <input type="radio" name="payMethod" value="0" id="creditCard" required>
+                  <label for="creditCard">信用卡</label>
+                </div>
+                <div class="payment-method">
+                  <input type="radio" name="payMethod" value="1" id="remittance">
+                  <label for="remittance">匯款</label>
+                </div>
+              </div>
+
+              <!-- 信用卡欄位 -->
+              <div id="creditCardFields" style="display: none;">
+                <div class="form-group mt-3">
+                  <label>卡號後四碼：</label>
+                  <input type="text" name="cardLast4" class="form-control" maxlength="4" pattern="\d{4}" disabled>
+                </div>
+              </div>
+
+              <!-- 匯款欄位 -->
+              <div id="remittanceFields" style="display: none;">
+                <div class="form-group mt-3">
+                  <label>匯款帳號：</label>
+                  <input type="text" name="remAcct" class="form-control" maxlength="20" disabled>
+                </div>
+              </div>
+            </div>
+          </div>
+          </div>
+
+          <div x-show="errorMessage"
+               class="alert alert-danger mt-3"
+               x-text="errorMessage">
+          </div>
+
+
+
+        <input type="hidden" name="memId" th:value="${mem.memId}">
+        <input type="hidden" name="planId" th:value="${plan.planId}">
+        <input type="hidden" name="planPrice" th:value="${plan.planPrice}">
+        <input type="hidden" name="attendeeCount" th:value="${attendeeCount}">
+        <input type="hidden" name="rooms" id="roomsInput">
+        <input type="hidden" name="orderStat" value="1">
+
+        <div class="button-group">
+          <a th:href="@{/planord/detail/{id}(id=${plan.planId})}" class="btn">
+            <div class="inner">
+              <div class="blob"></div>
+              <div class="blob"></div>
+              <div class="blob"></div>
+              <div class="blob"></div>
+            </div>
+            返回
+          </a>
+          <button type="submit" class="btn">
+            <div class="inner">
+              <div class="blob"></div>
+              <div class="blob"></div>
+              <div class="blob"></div>
+              <div class="blob"></div>
+            </div>
+            確認報名
+          </button>
+        </div>
+      </form>
+    </div>
+    <div th:replace="~{back-end/footer :: f}"></div>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"
+            integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+            crossorigin="anonymous"></script>
+    <script type="text/javascript" th:src="@{/js/nav.js}"></script>
+    <script>
+      (async function() {
+        $(document).ready(async function() {
+          //沒差啊 要這樣搞我 一行找2小時
+          const planId = $('#roomData').data('planId');
+          let selectedRooms = [];
+          let attendeeCount = 0;
+
+          // 從後端獲取數據
+          try {
+            const response = await $.ajax({
+              url: `/planord/cart/${planId}`,
+              method: 'GET',
+              dataType: 'json'
+            });
+
+            selectedRooms = response.rooms || [];
+            attendeeCount = response.attendeeCount || 0;
+
+            $('#roomsInput').val(JSON.stringify(selectedRooms));
+
+            // 更新總價格計算
+            const planPrice = Number($('#roomData').data('planPrice'));
+            const tripTotal = planPrice * attendeeCount;
+            const roomTotal = selectedRooms.reduce((sum, room) =>
+                    sum + (room.roomPrice * room.quantity), 0);
+            const totalPrice = tripTotal + roomTotal;
+
+            $('#totalPrice').text(totalPrice);
+
+          } catch (error) {
+            console.error('載入數據失敗:', error);
+          }
+
+          $('input[name="payMethod"]').change(function() {
+            const creditCardFields = $('#creditCardFields');
+            const remittanceFields = $('#remittanceFields');
+            const creditCardInput = $('input[name="cardLast4"]');
+            const remittanceInput = $('input[name="remAcct"]');
+
+            // 重置所有欄位
+            creditCardFields.hide();
+            remittanceFields.hide();
+            creditCardInput.prop('disabled', true).val('');
+            remittanceInput.prop('disabled', true).val('');
+
+            // 付款顯示
+            if (this.value === '0') {
+              creditCardFields.show();
+              creditCardInput.prop('disabled', false);
+            } else {
+              remittanceFields.show();
+              remittanceInput.prop('disabled', false);
+            }
+          });
+
+          // 表單提交處理
+          $('#orderForm').submit(async function(e) {
+            e.preventDefault();
+
+            const payMethod = $('input[name="payMethod"]:checked');
+            if (payMethod.length === 0) {
+              alert('請選擇付款方式');
+              return false;
+            }
+
+
+            // 處理其他付款方式
+            if (payMethod.val() === '0') {
+              const cardLast4 = $('input[name="cardLast4"]');
+              cardLast4.prop('disabled', false);
+              if (!cardLast4.val()) {
+                alert('請輸入信用卡後四碼');
+                return false;
+              }
+            } else if (payMethod.val() === '1') {
+              const remAcct = $('input[name="remAcct"]');
+              remAcct.prop('disabled', false);
+              if (!remAcct.val()) {
+                alert('請輸入匯款帳號');
+                return false;
+              }
+            }
+            const formData = $(this).serializeArray();
+            const roomsJson = JSON.stringify(selectedRooms);
+            $('#roomsInput').val(roomsJson);
+
+            this.submit();
+          });
+        });
+      })();
+    </script>
+
+    </body>
+    </html>

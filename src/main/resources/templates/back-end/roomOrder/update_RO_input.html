@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title>訂房明細修改 - update_RO_input.html</title>
+	<link rel="stylesheet" th:href="@{/css/bb.css}" />
+	<link rel="stylesheet" th:href="@{/css/new_elm.css}" />
+	<link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/hamburgers/1.1.3/hamburgers.min.css"
+    />
+</head>
+<body>
+	<div id="header"><i class="fa-solid fa-hotel"></i> 房型管理</div>
+    <div id="sub-header"><i class="fa-solid fa-pen"></i> 訂房明細修改</div>
+    
+    <div>
+		<form class="cus_form" th:action="@{updateRO}" method="post" th:object="${roVO}">
+			<!-- 訂單 ID -->
+			<div>
+				<label for="roid-text">訂房明細編號:</label>
+				<input class="form-control" id="roid-text" type="text" th:field="*{roomOrderId}" readonly />
+			</div>
+
+			<!-- 房型選擇 -->
+			<div>
+				<label for="rtp-sel">房型編號:</label>
+				<select id="rtp-sel" th:field="*{rtVO.roomTypeId}" onchange="updateRoomTypeName()">
+					<option th:each="rtVO : ${rtListData}"
+							th:value="${rtVO.roomTypeId}"
+							th:data-roomtypename="${rtVO.roomTypeName}"
+							th:text="${rtVO.roomTypeId}+'['+${rtVO.roomTypeName}+']'">
+					</option>
+				</select>
+				<span th:if="${#fields.hasErrors('rtVO.roomTypeId')}" th:errors="*{rtVO.roomTypeId}" class="error"></span>
+			</div>
+
+			<!-- 房型名稱 -->
+			<div>
+				<label for="rtpname-text">房型名稱:</label>
+				<input class="form-control" id="rtpname-text" type="text" th:field="*{roomTypeName}" readonly />
+				<span th:if="${#fields.hasErrors('roomTypeName')}" th:errors="*{roomTypeName}" class="error"></span>
+			</div>
+
+			<!-- 行程訂單 -->
+			<div>
+				<label for="poid-text">行程訂單編號:</label>
+				<input class="form-control" id="poid-text" type="text" th:field="*{planOrder.planOrderId}" readonly="readonly" />
+				<span th:if="${#fields.hasErrors('planOrder.planOrderId')}" th:errors="*{planOrder.planOrderId}" class="error"></span>
+			</div>
+
+			<!-- 訂房售價 -->
+			<div>
+				<label for="rp-text">訂房售價:</label>
+				<input class="form-control" id="rp-text" type="text" th:field="*{roomPrice}" placeholder="請輸入訂房售價"/>
+				<span th:if="${#fields.hasErrors('roomPrice')}" th:errors="*{roomPrice}" class="error"></span>
+			</div>
+
+			<!-- 訂房數量 -->
+			<div>
+				<label for="oq-text">訂房數量:</label>
+				<input class="form-control" id="oq-text" type="text" th:field="*{orderQty}" placeholder="請輸入訂房數量"/>
+				<span th:if="${#fields.hasErrors('orderQty')}" th:errors="*{orderQty}" class="error"></span>
+			</div>
+
+			<!-- 錯誤訊息顯示 -->
+			<div>
+				<span th:if="${errorMessage}" th:text="${errorMessage}" class="text-danger"></span>
+			</div>
+
+			<button type="submit" class="btn">
+				<i class="fa-solid fa-pen"></i> 送出修改
+				<span class="inner">
+            <span class="blob"></span>
+            <span class="blob"></span>
+            <span class="blob"></span>
+            <span class="blob"></span>
+        </span>
+			</button>
+		</form>
+       </div>
+        <div class="button-container">
+        <div>
+    		<a th:href="@{/roomOrder/select_page_RO}" class="btn">
+	    		<span class="inner">
+			        <span class="blob"></span>
+			        <span class="blob"></span>
+			        <span class="blob"></span>
+			        <span class="blob"></span>
+			      </span>
+	    		<i class="fa fa-search"></i> 訂房明細查詢
+    		</a>
+    	</div>
+    	<div>
+    		<a th:href=@{/roomOrder/listAllRO} class="btn">
+    			<span class="inner">
+		        <span class="blob"></span>
+		        <span class="blob"></span>
+		        <span class="blob"></span>
+		        <span class="blob"></span>
+		      </span>
+		      <i class="fa-solid fa-clipboard-list"></i> 訂房明細列表
+    		</a>
+   		</div>
+
+    </div>
+	<div th:insert="~{/back-end/footer :: footer}"></div>
+	<script type="text/javascript">
+		function updateRoomTypeName() {
+			const select = document.getElementById("rtp-sel");
+			const selectedOption = select.options[select.selectedIndex];
+			const roomTypeName = selectedOption.getAttribute("data-roomtypename");
+			document.getElementById("rtpname-text").value = roomTypeName;
+		}
+
+		// 當頁面載入時初始化房型名稱
+		document.addEventListener('DOMContentLoaded', function() {
+			updateRoomTypeName();
+		});
+   </script>
+</body>
+</html>

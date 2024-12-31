@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title> 前台-訂單明細 myPdtOrderItem.html </title>
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+	integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+	crossorigin="anonymous" referrerpolicy="no-referrer" />
+<link rel="stylesheet"
+	href="https://cdnjs.cloudflare.com/ajax/libs/hamburgers/1.1.3/hamburgers.min.css" />
+<link rel="stylesheet" href="../static/css/new_elm.css" />
+
+<style type="text/css">
+/* 基本樣式 */
+html, body {
+	margin: 0;
+	height: 100%;
+}
+
+/* 使用 Flexbox */
+.wrapper {
+	display: flex;
+	flex-direction: column;
+	min-height: 100vh; /* 滿視窗高度 */
+}
+.order-header {
+	display: flex;
+	justify-content: space-between;
+/* 	align-items: center; */
+	margin-bottom: 20px;
+}
+/* 強調表格標題行 */
+.table-dark th {
+	background-color: #343a40; /* 深灰背景 */
+	color: #ffffff; /* 白色文字 */
+}
+
+.order-actions button {
+	margin-left: 10px;
+}
+
+.order-info, .product-list {
+	margin-bottom: 20px;
+}
+
+.total-section {
+	text-align: right;
+	font-weight: bold;
+}
+
+</style>
+</head>
+<body>
+	<!-- 導覽列 -->
+	<div th:replace="~{front-end/nav}"></div>
+    <div class="wrapper">
+		<main>
+		<!------------------------------- content ------------------------------->
+	    <div class="container mt-5">
+	        <h1 class="text-center mb-4 ">訂單明細</h1>
+	        <!-- 訂單資訊 Header -->
+	        <div class="order-header card p-4 mb-4 shadow-sm">
+	            <div>
+	                <p><strong>訂單編號:</strong> <span th:text="${pdtOrderId}" id="pdtOrderId"></span></p>
+	<!--                 <p><strong>訂單狀態:</strong> <span th:text="${orderStatName]}"></span></p> -->
+					<p><strong>訂單狀態:</strong> 
+					   <span th:switch="${orderStat}">
+					       <span th:case="0">未付款</span>
+					       <span th:case="1">已付款</span>
+					       <span th:case="2">訂單成立</span>
+					       <span th:case="3">配送中</span>
+					       <span th:case="4">商品已到達</span>
+					       <span th:case="5">訂單完成</span>
+					       <span th:case="6">訂單取消</span>
+					       <span th:case="7">未出貨</span>
+					       <span th:case="8">退款中</span>
+					       <span th:case="9">退款完成</span>
+					       <span th:case="*">未知狀態</span>
+					   </span>
+					</p>
+					<p><strong>訂單日期:</strong> <span th:text="${orderDate}"></span></p>
+	            </div>
+	
+	        </div>
+	       <br><br>
+	
+	        <!-- 訂購清單 -->
+	        <h4>商品清單</h4>
+	        <table class="table product-list">
+	            <thead>
+	                <tr>
+	                    <th>商品編號</th>
+	                    <th>商品名稱</th>
+	                    <th>商品單價</th>
+	                    <th>商品數量</th>
+	                </tr>
+	            </thead>
+	            <tbody>
+	                <tr th:each="item : ${pdtOrderItemListData}">
+	                    <td><span th:text="${item.pdtId}" id="pdtId"></span></td>
+	                    <td><span th:text="${item.pdtName}"></span></td>
+	                    <td>$<span th:text="${item.pdtPrice}"></span></td>
+	                    <td><span th:text="${item.orderQty}"></span></td>
+	                </tr>
+	            </tbody>
+	            <tfoot>
+			        <tr>
+			        	<td></td>
+			        	<td></td>
+			        	<td></td>
+			            <td class="fw-bold">總計：<span th:text="${totalAmount}" id="totalAmount"></span></td>
+			        </tr>
+			    </tfoot>
+	        </table>
+	    </div>
+	    
+	    <!-- 綠界格式的商品名稱 -->
+		<span th:text="${itemNames}" id="itemNames" style="display:none;"></span>
+		<!-- 隱藏的表單（用於存放數據，不會提交本表單） -->
+		<form id="checkoutForm" style="display:none;">
+		    <input type="hidden" name="totalAmount" id="totalAmountInput">
+		    <input type="hidden" name="itemNames" id="itemNamesInput">
+		    <input type="hidden" name="pdtOrderId" id="pdtOrderIdInput">
+		</form>
+	
+		<div class="text-center mb-4">
+	        <a href="javascript:history.back()" class="btn">回上一頁
+	       		<span class="inner">
+		          <span class="blob"></span>
+		          <span class="blob"></span>
+		          <span class="blob"></span>
+		          <span class="blob"></span>
+		        </span>
+	        </a>
+	        <button class="btn" id="submitOrder" th:if="${orderStat == 0 or orderStat == 2}">結帳</button>
+	    </div>
+	    </main>
+	</div>
+    
+	<!------------------------------- footer ------------------------------->
+	<div th:replace="~{back-end/footer :: f}"></div>
+	
+    <script type="text/javascript" src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+	<script type="text/javascript" th:src="@{/js/nav.js}"></script>
+	
+	<script>
+    document.getElementById('submitOrder').addEventListener('click', function () {
+    	 // 阻止默認表單提交行為
+        event.preventDefault();
+
+        // 獲取表單數據
+        const totalAmount = document.getElementById('totalAmount').innerText;
+        const itemNames = document.getElementById('itemNames').innerText;
+        const pdtOrderId = document.getElementById('pdtOrderId').innerText;
+
+        // 將數據包裝為 JSON
+        const formData = {
+            totalAmount: totalAmount,
+            itemNames: itemNames,
+            pdtOrderId: pdtOrderId
+        };
+
+    	 // 使用 fetch 發送 POST 請求
+        fetch('http://localhost:8080/myPdtOrderItem_ecpayCheckout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+            .then(response => response.text())  // 獲取回應的 HTML 表單 form
+            .then(formHtml => {
+                // 構造一個隱藏表單並提交
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = 'https://payment-stage.ecPay.com.tw/Cashier/AioCheckOut/V5';  // 目標綠界付款頁面的 URL
+
+                // 將收到的表單內容插入到表單中
+                form.innerHTML = formHtml;
+
+                // 將表單添加到頁面並提交
+                document.body.appendChild(form);
+                form.submit();  // 提交表單
+
+            })
+            .catch(error => {
+                // 處理錯誤
+                console.error('錯誤:', error);
+            });
+        
+    });
+</script>
+
+</body>
+</html>

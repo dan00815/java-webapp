@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>商城商品詳情 - productDetail.html</title>
+
+    <!-- 引入外部資源 -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+      integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.datatables.net/2.1.8/css/dataTables.dataTables.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/hamburgers/1.1.3/hamburgers.min.css"
+    />
+    <link rel="stylesheet" th:href="@{/css/bb.css}" />
+    <link rel="stylesheet" th:href="@{/css/new_elm.css}" />
+    <link rel="stylesheet" th:href="@{/css/pdtFront.css}" />
+    <link rel="stylesheet" type="text/css" th:href="@{/css/slick/slick.css}"/>
+	<link rel="stylesheet" type="text/css" th:href="@{/css/slick/slick-theme.css}"/>
+    <style>
+        .product-details .product-image {
+		width: 100%;
+		max-height: 450px;
+		object-fit: cover;
+		border-radius: 8px;
+		box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+	}
+	
+	.myImg{
+		width: 100%;
+		max-height: 450px;
+	}
+	.product-details .price {
+		color: #ff5722;
+		font-weight: bold;
+		font-size: 1.5rem;
+	}
+	
+	.product-details .btn {
+		background: #60b3f0;
+		border-radius: 30px;
+		color: #fff;
+	}
+	
+	.product-details .btn:hover {
+		background: rgb(96, 179, 240);
+	}
+	
+	.product-thumbnails img {
+		width: 80%;
+		object-fit: cover;
+		border-radius: 8px;
+		margin: 5px;
+		cursor: pointer;
+		transition: transform 0.3s;
+	}
+	
+	.product-thumbnails img:hover {
+		transform: scale(1.1);
+	}
+        /* 購物車圖示 */
+        .cart-icon {
+		position: fixed; 
+	    top: 500px; 
+	    right: 0; 
+	    cursor: pointer;
+	    z-index: 1000; /* 確保位於其他元素之上 */
+	    padding: 10px; 
+	    background-color: rgba(255, 255, 255, 0.8); /* 背景增加透明效果 */
+	    border-radius: 5px; 
+	    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); 
+		}
+		
+		.cart-icon i {
+		    font-size: 24px;
+		    color: #333; 
+		}
+		
+		.cart-icon a {
+		    text-decoration: none; /* 移除下劃線 */
+		}
+    </style>
+</head>
+<body>
+	<div th:insert="~{/front-end/nav :: nav}"></div>
+	<div id="header"><i class="fa-solid fa-gift"></i> 商城</div>
+    <div id="sub-header"><i class="fa-solid fa-list"></i> 商品詳情</div>
+    <!-- 商品詳情區 -->
+    <div class="container py-5 product-details">
+        <div class="row">
+            <!-- 左側商品圖片 -->
+            <div class="col-lg-6" >
+				<div class="my-class">
+					<div class="d-flex justify-content-center mt-3 product-thumbnails slick-box"
+						th:each="pdtImgVO : ${pdtImgList}">
+						<img class="myImg"
+							th:src="@{/pdt/DBGifReader} + '?pdtImgId=' + ${pdtImgVO.pdtImgId}"
+							alt="商品附加圖片">
+					</div>
+				</div>
+			</div>
+
+            <!-- 右側商品資訊 -->
+            <div class="col-lg-6">
+                <h1 th:text="${pdtVO.pdtName}" class="mb-3"></h1>
+                <p class="price mb-4">
+                    <i class="fas fa-tag"></i>
+                    <span th:text="'NT$ ' + ${pdtVO.pdtPrice}"></span>
+                </p>
+                <p class="mb-4">
+                    <i class="fas fa-info-circle"></i>
+                    <span th:text="${pdtVO.pdtDesc}"></span>
+                </p>
+                <!-- 提交商品表單 -->
+                <form class="cus_form mt-4 add-to-cart-form" data-url="/shop/addToCart" method="post">
+                <!-- 隱藏欄位，提交商品信息 -->
+	                <input type="hidden" name="pdtId" th:value="${pdtVO.pdtId}">
+	                <input type="hidden" name="pdtName" th:value="${pdtVO.pdtName}">
+	                <input type="hidden" name="pdtPrice" th:value="${pdtVO.pdtPrice}">
+                    <div class="mb-3 quantity-control">
+                        <label for="quantity" class="form-label"><i class="fas fa-box"></i> 購買數量</label>
+                        <input type="number" id="quantity" class="quantity-input" name="orderQty" value="1" min="1" max="99" oninput="validateQuantity(this)">
+                    </div>
+                    <button type="submit" class="btn btn-lg cart-btn">
+                        <i class="fas fa-shopping-cart"></i> 加入購物車
+                    	 <span class="inner">
+					          <span class="blob"></span>
+					          <span class="blob"></span>
+					          <span class="blob"></span>
+					          <span class="blob"></span>
+					        </span>
+                    </button>
+                </form>
+                
+            </div>
+        </div>
+    </div>
+    
+   	<!--購物車連結 -->
+	<div class="cart-icon">
+		<a th:href="@{/shop/shoppingCart}">
+			<i class="fas fa-shopping-cart"></i></a>
+   	</div>
+	   	
+	<div th:replace="~{back-end/footer :: footer}"></div>
+    <!-- 引入 JavaScript -->
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.0.min.js"></script>
+	  <script type="text/javascript" src="//code.jquery.com/jquery-migrate-1.2.1.min.js"></script>
+	  <script type="text/javascript" th:src="@{/css/slick/slick.min.js}"></script>
+	<script type="text/javascript" th:src="@{/js/nav.js}"></script>
+	<script>
+    $(document).ready(function(){
+      $('.my-class').slick({
+    	  slidesToShow: 1,
+    	  slidesToScroll: 1,
+    	  autoplay: true,
+    	  autoplaySpeed: 2000,
+      });
+    });  
+	
+	//數量框輸入限制
+    function validateQuantity(input) {
+        const min = parseInt(input.getAttribute('min')) || 1;
+        const max = parseInt(input.getAttribute('max')) || 99;
+        let value = parseInt(input.value);
+
+        if (isNaN(value) || value < min) {
+            alert(`數量不能小於 ${min}`);
+            input.value = min; // 重置為最小值
+        } else if (value > max) {
+            alert(`數量不能大於 ${max}`);
+            input.value = max; // 重置為最大值
+        }
+    }
+	
+    // 綁定加入購物車按鈕點擊事件
+    document.addEventListener("DOMContentLoaded", function () {
+        const forms = document.querySelectorAll('.add-to-cart-form');
+
+        forms.forEach(form => {
+            const button = form.querySelector('.cart-btn');
+            button.addEventListener('click', function (event) {
+                event.preventDefault(); // 阻止預設提交行為
+
+                // 獲取表單的 URL 和數據
+                const url = form.getAttribute('data-url');
+                const formData = new FormData(form);
+
+                // 使用 Fetch 提交表單
+                fetch(url, {
+                    method: 'POST',
+                    body: formData
+                }).then(response => {
+                    if (response.ok) {
+                        // 顯示成功通知
+                        alert('加入購物車成功');
+                    } else {
+                        alert('加入購物車失敗，請稍後再試！');
+                    }
+                }).catch(error => {
+                    console.error('錯誤:', error);
+                    alert('加入購物車時發生錯誤！');
+                });
+            });
+        });
+    });
+	</script>
+</body>
+</html>

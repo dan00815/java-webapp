@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="zh-tw" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>活動列表</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"/>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/hamburgers/1.1.3/hamburgers.min.css"/>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+<!--     <link rel="stylesheet" th:href="@{/css/elm.css}" /> -->
+	<link rel="stylesheet" th:href="@{/css/new_elm.css}" />
+</head>
+<body>
+<div th:replace="~{front-end/nav}"></div>
+<style>
+    .section-title {
+        text-align: center;
+        margin-bottom: 40px;
+        position: relative;
+        padding: 20px 0;
+    }
+
+    .section-title span {
+        color: rgba(0, 102, 204, 0.2);
+        font-size: 60px;
+        font-weight: bold;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        z-index: 0;
+    }
+
+    .section-title h1 {
+        font-size: 36px;
+        font-weight: bold;
+        color: #0066cc;
+        margin: 0;
+        position: relative;
+        z-index: 1;
+        display: inline-block;
+        background: linear-gradient(120deg, #0066cc 0%, #0099ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    .title-underline {
+        width: 100px;
+        height: 3px;
+        background: linear-gradient(to right, #0066cc, #0099ff);
+        margin: 10px auto 0;
+        position: relative;
+    }
+
+    .title-underline:after {
+        content: '';
+        position: absolute;
+        bottom: -3px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 60px;
+        height: 2px;
+        background: linear-gradient(to right, #0066cc, #0099ff);
+        opacity: 0.5;
+    }
+
+
+    .event-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 30px;
+        padding: 20px;
+    }
+
+    .event-card {
+        background: white;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s;
+    }
+
+    .event-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .event-image {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+    }
+
+    .event-content {
+        padding: 20px;
+    }
+
+    .event-title {
+        color: #0080ff;
+        font-size: 1.25rem;
+        font-weight: bold;
+        text-decoration: none;
+        margin-bottom: 15px;
+        display: block;
+    }
+
+    .event-info {
+        color: rgba(0, 0, 0, 0.7);
+        margin: 10px 0;
+        font-size: 0.9rem;
+    }
+
+    .event-desc {
+        color: rgba(0, 0, 0, 0.7);
+        margin: 15px 0;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+    }
+
+    .event-status {
+        display: inline-block;
+        padding: 5px 15px;
+        border-radius: 20px;
+        background-color: rgba(91, 192, 222, 0.9);
+        border: 2px solid #46b8da;
+        color: white;
+        font-weight: bold;
+    }
+
+    .attendance-info {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 15px;
+        padding-top: 15px;
+        border-top: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .attendance-label {
+        font-size: 0.9em;
+        color: rgba(0, 0, 0, 0.7);
+    }
+
+    .attendance-value {
+        font-weight: bold;
+        color: #0080ff;
+        font-size: 1.2em;
+    }
+
+    .no-events {
+        text-align: center;
+        padding: 50px;
+        background: white;
+        border-radius: 10px;
+        margin: 20px;
+        color: rgba(0, 0, 0, 0.7);
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+
+    }
+    .calendar-link {
+        display: none;
+    }
+
+    .calendar-link .btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 30px;
+        font-size: 1.1rem;
+    }
+
+    .calendar-link .btn i {
+        font-size: 1.2rem;
+    }
+
+    /* 如果你想要按鈕在懸停時有額外的效果 */
+    .calendar-link .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0, 128, 255, 0.2);
+    }
+    .attendance-value.full {
+        color: #dc3545;  /* 紅色 */
+        font-weight: bold;
+    }
+
+    .alert {
+        margin: 20px auto;
+        max-width: 800px;
+        text-align: center;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+    .search-container {
+        max-width: 1200px;
+        margin: 0 auto 40px;
+        padding: 0 20px;
+    }
+
+    .search-form {
+        background: white;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 4px 15px rgba(0, 128, 255, 0.1);
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    .search-row {
+        display: flex;
+        gap: 20px;
+        align-items: flex-end;
+    }
+
+    .search-group {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .full-width {
+        width: 100%;
+    }
+
+    .search-input {
+        padding: 8px 12px;
+        border: 2px solid rgba(0, 128, 255, 0.2);
+        border-radius: 8px;
+        font-size: 0.9rem;
+    }
+
+    .date-inputs, .number-inputs {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 200px; /* 確保足夠的寬度 */
+    }
+
+    .button-group {
+        display: flex;
+        gap: 8px;
+        align-items: flex-end; /* 與輸入框底部對齊 */
+        margin-left: auto; /* 推到右側 */
+    }
+
+    .search-button, .reset-button, .calendar-button {
+        padding: 8px 15px;
+        border: none;
+        border-radius: 8px;
+        font-size: 0.9rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        white-space: nowrap;
+        height: 41px; /* 與輸入框同高 */
+    }
+
+    .search-button {
+        background: #0080ff;
+        color: white;
+    }
+
+    .reset-button {
+        background: #f8f9fa;
+        color: #666;
+    }
+
+    .calendar-button {
+        background: #28a745;
+        color: white;
+        text-decoration: none;
+    }
+    .search-row {
+        display: flex;
+        gap: 15px; /* 減少整體間距 */
+        align-items: flex-end;
+    }
+
+    .date-inputs, .number-inputs {
+        display: flex;
+        align-items: center;
+        gap: 8px;  /* 減少內部間距 */
+        min-width: 180px; /* 調整寬度 */
+    }
+
+    .button-group {
+        display: flex;
+        gap: 6px;  /* 減少按鈕之間的間距 */
+        align-items: flex-end;
+        margin-left: 15px; /* 改用較小的左邊距 */
+    }
+
+    /* 調整輸入框和間隔文字的樣式 */
+    .date-separator, .number-separator {
+        color: #666;
+        margin: 0 4px; /* 減少分隔符號的間距 */
+    }
+
+    /* 如果需要的話，可以調整輸入框的寬度 */
+    .search-input {
+        padding: 8px 12px;
+        min-width: 0; /* 允許輸入框收縮 */
+        flex: 1;
+    }
+    
+    .no-results{
+    	margin:10px 30px;
+    }
+    
+    h3, p {
+    	text-align: center;
+    }
+    
+    p {
+    	margin:15px 30px;
+    }
+</style>
+
+
+<div class="form">
+    <div th:if="${errorMessage != null}" class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>抱歉！</strong> <span th:text="${errorMessage}"></span>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+    <div th:if="${events == null or events.empty}" class="no-results">
+        <h3>
+        <span th:if="${keyword != null and !keyword.empty}" class="keyword">
+            找不到符合 "<span th:text="${keyword}"></span>" 的活動
+        </span>
+        </h3>
+        <p th:if="${keyword != null and !keyword.empty}">
+            請嘗試使用其他關鍵字搜尋，或
+            <a th:href="@{/event/list}" class="back-link">查看所有活動</a>
+        </p>
+    </div>
+
+    <div class="section-title">
+        <h1>所有活動</h1>
+        <div class="title-underline"></div>
+    </div>
+
+    <div class="search-container">
+        <form th:action="@{/front/list}" method="get" class="search-form">
+            <!-- 第一行 -->
+            <div class="search-row">
+                <div class="search-group full-width">
+                    <label>活動名稱/描述</label>
+                    <input type="text" name="keyword" th:value="${keyword}"
+                           class="search-input" placeholder="請輸入關鍵字">
+                </div>
+            </div>
+
+            <!-- 第二行 -->
+            <div class="search-row">
+                <div class="search-group">
+                    <label>活動日期範圍</label>
+                    <div class="date-inputs">
+                        <input type="date" name="startDate" th:value="${startDate}"
+                               class="search-input">
+                        <span class="date-separator">至</span>
+                        <input type="date" name="endDate" th:value="${endDate}"
+                               class="search-input">
+                    </div>
+                </div>
+
+                <div class="search-group">
+                    <label>參加人數範圍</label>
+                    <div class="number-inputs">
+                        <input type="number" name="minAttend" th:value="${minAttend}"
+                               class="search-input" placeholder="最少人數">
+                        <span class="number-separator">至</span>
+                        <input type="number" name="maxAttend" th:value="${maxAttend}"
+                               class="search-input" placeholder="最多人數">
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button type="submit" class="search-button">
+                        <i class="fas fa-search"></i> 搜尋
+                    </button>
+                    <button type="button" class="reset-button" onclick="resetForm()">
+                        <i class="fas fa-redo"></i> 重置
+                    </button>
+                    <a th:href="@{/event/calendar}" class="calendar-button">
+                        <i class="fas fa-calendar-alt"></i> 查看活動行程表
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+
+<!--    <div class="calendar-link">-->
+<!--        <a th:href="@{/event/calendar}" class="btn">-->
+<!--            <div class="inner">-->
+<!--                <div class="blob"></div>-->
+<!--                <div class="blob"></div>-->
+<!--                <div class="blob"></div>-->
+<!--                <div class="blob"></div>-->
+<!--            </div>-->
+<!--            <i class="fas fa-calendar-alt"></i> 查看活動行程表-->
+<!--        </a>-->
+<!--    </div>-->
+
+    <div class="event-grid">
+        <div th:each="event : ${events}" class="event-card">
+            <img th:if="${event.evtImg != null and !event.evtImg.empty}"
+                 th:src="@{'/image/' + ${event.evtImg[0].evtImgId}}"
+                 class="event-image" alt="活動圖片">
+            <img th:if="${event.evtImg == null or event.evtImg.empty}"
+                 src="/images/default-event.jpg"
+                 class="event-image" alt="預設圖片">
+
+            <div class="event-content">
+                <a th:href="@{/front/detail/{id}(id=${event.evtId})}" class="event-title"
+                   th:text="${event.evtName}">活動名稱</a>
+
+                <div class="event-info">
+                    <i class="fas fa-calendar"></i>
+                    活動時間：<span th:text="${#temporals.format(event.evtDate, 'yyyy-MM-dd HH:mm')}"></span>
+                </div>
+
+                <div class="event-info">
+                    <i class="fas fa-clock"></i>
+                    報名截止：<span th:text="${#temporals.format(event.evtDeadLine, 'yyyy-MM-dd HH:mm')}"></span>
+                </div>
+
+                <div class="event-desc" th:text="${event.evtDesc}">活動描述</div>
+
+                <span class="event-status">報名中</span>
+
+                <div class="attendance-info">
+                    <div class="attendance-item">
+                        <div class="attendance-label">已報名</div>
+                        <div th:if="${event.evtAttend >= event.evtMax}" class="attendance-value full">已額滿</div>
+                        <div th:unless="${event.evtAttend >= event.evtMax}" class="attendance-value" th:text="${event.evtAttend}">0</div>
+                    </div>
+                    <div class="attendance-item">
+                        <div class="attendance-label">名額上限</div>
+                        <div class="attendance-value" th:text="${event.evtMax}">0</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${events == null or events.empty}" class="no-events">
+        目前沒有進行中的活動
+    </div>
+</div>
+
+<div th:replace="~{back-end/footer :: f}"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" th:src="@{/js/nav.js}"></script>
+<script>
+    function resetForm() {
+        //清空就好 別重導= =
+        const form = document.querySelector('.search-form');
+
+        const inputs = form.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.value = '';
+        });
+        return false;
+    }
+</script>
+</body>
+</html>

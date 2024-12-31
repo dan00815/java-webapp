@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title> 後台-訂單明細 pdtOrderItem.html </title>
+
+	 <!-- 使用included-fragment.html網頁的全部 -->
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css"
+		integrity="sha512-Kc323vGBEqzTmouAECnVceyQqyqdsSiqLQISBL29aUW4U/M7pSPA/gEUZQqv1cwx4OnYxTxve5UMg5GT6L4JJg=="
+		crossorigin="anonymous" referrerpolicy="no-referrer" />
+	<link rel="stylesheet"
+		href="https://cdnjs.cloudflare.com/ajax/libs/hamburgers/1.1.3/hamburgers.min.css" />
+	
+	<link rel="stylesheet" href="../static/css/backend_sideBar.css" />
+	<link rel="stylesheet" th:href="@{/css/new_elm.css}" />
+
+<style>
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .order-actions button {
+            margin-left: 10px;
+        }
+        .order-info, .product-list {
+            margin-bottom: 20px;
+        }
+        .total-section {
+            text-align: right;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+	<div th:replace="~{back-end/backend_sideBar}"></div>
+	<main>
+	<!------------------------------- content ------------------------------->
+    <div class="container mt-5">
+        <h1 class="text-center mb-4">訂單明細</h1>
+        <!-- 訂單資訊 Header -->
+        <div class="order-header">
+            <div>
+                <p><strong>訂單編號:</strong> <span id="orderId" th:text="${pdtOrderId}"></span></p>
+                
+				<p><strong>訂單狀態:</strong> 
+				   <span th:switch="${orderStat}">
+				       <span th:case="0">未付款</span>
+				       <span th:case="1">已付款</span>
+				       <span th:case="2">訂單成立</span>
+				       <span th:case="3">配送中</span>
+				       <span th:case="4">商品已到達</span>
+				       <span th:case="5">訂單完成</span>
+				       <span th:case="6">訂單取消</span>
+				       <span th:case="7">未出貨</span>
+				       <span th:case="8">退款中</span>
+				       <span th:case="9">退款完成</span>
+				       <span th:case="*">未知狀態</span>
+				   </span>
+				</p>
+            </div>
+            
+            <div>
+                <p><strong>訂單日期:</strong> <span th:text="${orderDate}"></span></p>
+            </div>
+            <div class="order-actions">
+            	<button class="btn" id="exportPdfBtn"><i class="fas fa-file"></i> 匯出PDF
+            		<span class="inner">
+			          <span class="blob"></span>
+			          <span class="blob"></span>
+			          <span class="blob"></span>
+			          <span class="blob"></span>
+			        </span>
+            	</button>
+            </div>
+        </div>
+
+        <!-- 訂購清單 -->
+        <h4>商品清單</h4>
+        <table class="table product-list">
+            <thead>
+                <tr>
+                    <th>商品編號</th>
+                    <th>商品名稱</th>
+                    <th>商品單價</th>
+                    <th>商品數量</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="item : ${pdtOrderItemListData}">
+                    <td><span th:text="${item.pdtId}"></span></td>
+                    <td><span th:text="${item.pdtName}"></span></td>
+                    <td>$<span th:text="${item.pdtPrice}"></span></td>
+                    <td><span th:text="${item.orderQty}"></span></td>
+                </tr>
+            </tbody>
+            <tfoot>
+		        <tr>
+		        	<td></td>
+		        	<td></td>
+		        	<td></td>
+		            <td>總計：<span th:text="${totalAmount}"></span></td>
+		        </tr>
+		    </tfoot>
+        </table>
+    </div>
+    
+
+	<div class="text-center mb-4">
+        <a href="javascript:history.back()" class="btn">回到上一頁
+       		<span class="inner">
+	          <span class="blob"></span>
+	          <span class="blob"></span>
+	          <span class="blob"></span>
+	          <span class="blob"></span>
+	        </span>
+        </a>
+    </div>
+    </main>
+    
+    <script>
+    document.getElementById("exportPdfBtn").addEventListener("click", function() {
+        // 獲取 pdtOrderId
+        var pdtOrderId = document.getElementById("orderId").textContent.trim();
+
+        // 使用 fetch 發送 POST 請求
+        fetch('/pdtorderitem/export/pdf', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                pdtOrderId: pdtOrderId
+            })
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('匯出失敗！');
+            }
+            return response.blob(); // 將回應轉為 Blob 格式
+        })
+        .then(blob => {
+            // 創建一個 Blob URL 並下載文件
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.style.display = 'none';
+            a.href = url;
+
+            // 文件名可以根據需要設置
+            a.download = `order-${pdtOrderId}.pdf`;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url); // 釋放 URL 物件
+        })
+        .catch(error => {
+            console.error('錯誤:', error);
+            alert('匯出失敗，請稍後重試！');
+        });
+    });
+    </script>
+
+</body>
+</html>
